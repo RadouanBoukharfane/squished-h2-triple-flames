@@ -3,7 +3,7 @@
 This repository contains the inputs, code modifications, scripts and derived data needed to reproduce the
 simulations and figures of
 
-> *<Squished hydrogen--air triple flames: a tip-curvature law and its pressure dependence, R. Boukharfane (2026))>*
+> *<Pressure dependence of hydrogen–air triple-flame speed in thin mixing layers: a Markstein scaling, R. Boukharfane (2026))>*
 
 All simulations were performed with **PeleLMeX** (2D, low-Mach, AMR) with two transport formulations: mixture-averaged (MA) and constant Schmidt numbers (SC).
 
