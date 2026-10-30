@@ -1,0 +1,6 @@
+p_bar,Tu_K,phi,sL_m_s,deltaL_um,case
+1,300,1.6,3.1965,307.4,FlameSheetH2-SC
+10,579,1.6,8.1790,25.1,FlameSheetH2-SC-p10_T579
+20,706,1.6,10.4735,11.9,FlameSheetH2-SC-p20_T706
+10,300,1.6,2.4611,19.5,FlameSheetH2-SC-p10_T300
+1,579,1.6,8.9480,439.3,FlameSheetH2-SC-p1_T579

@@ -1,0 +1,84 @@
+diff --git a/Source/Transport/Sutherland.H b/Source/Transport/Sutherland.H
+index 39a5e36..376bb44 100644
+--- a/Source/Transport/Sutherland.H
++++ b/Source/Transport/Sutherland.H
+@@ -28,19 +28,21 @@ struct SutherlandTransport
+     TransParm<EosType, transport_type> const* tparm)
+   {
+ 
++    // viscosity: Sutherland law, or power law mu_ref (T/T_ref)^n if viscosity_power > 0
++    const amrex::Real muloc =
++      (tparm->viscosity_power > 0.0)
++        ? tparm->viscosity_mu_ref *
++            std::pow(Tloc / tparm->viscosity_T_ref, tparm->viscosity_power)
++        : tparm->viscosity_mu_ref *
++            std::pow((Tloc / tparm->viscosity_T_ref), 1.5) *
++            (tparm->viscosity_T_ref + tparm->viscosity_S) /
++            (Tloc + tparm->viscosity_S);
++
+     if (wtr_get_mu) {
+-      mu = tparm->viscosity_mu_ref *
+-           std::pow((Tloc / tparm->viscosity_T_ref), 1.5) *
+-           (tparm->viscosity_T_ref + tparm->viscosity_S) /
+-           (Tloc + tparm->viscosity_S);
++      mu = muloc;
+     }
+ 
+     if (wtr_get_lam) {
+-      amrex::Real muloc = tparm->viscosity_mu_ref *
+-                          std::pow((Tloc / tparm->viscosity_T_ref), 1.5) *
+-                          (tparm->viscosity_T_ref + tparm->viscosity_S) /
+-                          (Tloc + tparm->viscosity_S);
+-
+       amrex::Real Cpmix = 0.0, Tloc_cpy = Tloc;
+       CKCPBS(Tloc_cpy, Yloc, Cpmix);
+       lam = muloc * Cpmix / tparm->Prandtl_number;
+@@ -51,8 +53,16 @@ struct SutherlandTransport
+     }
+ 
+     if (wtr_get_Ddiag) {
++      // constant Schmidt number of species i: rho D_i = mu / Sc_i. Returned in the convention of the
++      // Simple (mixture-averaged) model, rho D_i W_i / Wbar, since PeleLMeX multiplies by Wbar / W_i
++      amrex::Real mw[NUM_SPECIES] = {0.0};
++      get_mw(mw);
++      amrex::Real Wbar = 0.0;
++      CKMMWY(Yloc, Wbar);
+       for (int i = 0; i < NUM_SPECIES; ++i) {
+-        Ddiag[i] = tparm->const_diffusivity;
++        Ddiag[i] = (tparm->schmidt[i] > 0.0)
++                     ? muloc / tparm->schmidt[i] * mw[i] / Wbar
++                     : tparm->const_diffusivity;
+       }
+     }
+ 
+diff --git a/Source/Transport/TransportParams.H b/Source/Transport/TransportParams.H
+index 99d8a6e..2301827 100644
+--- a/Source/Transport/TransportParams.H
++++ b/Source/Transport/TransportParams.H
+@@ -39,6 +39,11 @@ struct TransParm<EOSType, SutherlandTransport>
+   amrex::Real viscosity_S{110.4};
+   amrex::Real const_bulk_viscosity{0.0};
+   amrex::Real const_diffusivity{1.0};
++  // constant-Schmidt options (triple-points campaign, 28/10/2026): power-law viscosity
++  // mu = mu_ref (T/T_ref)^viscosity_power when viscosity_power > 0, and species
++  // diffusion rho D_k = mu / Sc_k when schmidt_numbers are given (> 0)
++  amrex::Real viscosity_power{-1.0};
++  amrex::GpuArray<amrex::Real, NUM_SPECIES> schmidt = {0.0};
+   bool use_soret = false;
+ };
+ 
+@@ -165,6 +170,14 @@ struct InitParm<transport::TransParm<EOSType, transport::SutherlandTransport>>
+     pp.query("viscosity_S", tparm->viscosity_S);
+     pp.query("const_bulk_viscosity", tparm->const_bulk_viscosity);
+     pp.query("const_diffusivity", tparm->const_diffusivity);
++    pp.query("viscosity_power", tparm->viscosity_power);
++    amrex::Vector<amrex::Real> sc;
++    if (pp.queryarr("schmidt_numbers", sc)) {
++      AMREX_ALWAYS_ASSERT(sc.size() == NUM_SPECIES);
++      for (int n = 0; n < NUM_SPECIES; ++n) {
++        tparm->schmidt[n] = sc[n];
++      }
++    }
+   }
+ 
+   static void host_deallocate(

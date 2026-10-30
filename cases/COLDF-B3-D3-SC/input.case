@@ -1,0 +1,97 @@
+# Case COLDF-B3-D3-SC (built by PELE/tools/make_pele_case.py from C1): p = 1 bar, Tu = 579 K, Delta0+ = 1.5,
+# y_target = 6.75 mm (1-atm equivalent), soret = False.
+# Template: case C1 of Chaplet et al. (2026) with PeleLMeX: H2/air triple flame, 1 atm, 300 K, Delta0+ = 32
+# (Delta0 = 10.144 mm), same domain as Chaplet et al. (75 x 45 mm, slip lateral walls), San Diego + MA transport.
+# Ignition by a hot band just above the target height; active control of V_in on the
+# T = 1000 K leading edge at y = 20 mm, with the pseudo-gravity correction of the inflow acceleration.
+geometry.is_periodic = 0 0
+geometry.coord_sys   = 0
+geometry.prob_lo     = 0.0 0.0
+geometry.prob_hi     = 1.030130514039914e-01 6.180783084239481e-02
+peleLM.lo_bc = SlipWallAdiab Inflow
+peleLM.hi_bc = SlipWallAdiab Outflow
+amr.n_cell          = 480 288
+amr.max_level       = 3
+amr.ref_ratio       = 2 2 2
+amr.regrid_int      = 4
+amr.n_error_buf     = 2 2 2
+amr.grid_eff        = 0.7
+amr.blocking_factor = 16
+amr.max_grid_size   = 64
+prob.P_mean = 101325.0
+prob.xc = 5.150653e-02
+prob.delta0 = 6.531027e-04
+prob.T_in = 579
+prob.V_in = 14.4937
+prob.y_hot = 1.0e3
+prob.w_hot = 1.373507e-03
+# prob.T_hot unused: burnt band at the complete-combustion temperature
+peleLM.v = 1
+peleLM.use_wbar = 1
+peleLM.sdc_iterMax = 2
+peleLM.num_init_iter = 3
+peleLM.do_temporals = 1
+peleLM.temporal_int = 10
+peleLM.do_extremas = 1
+peleLM.do_mass_balance = 1
+amr.stop_time = 8.5289e-03
+amr.max_wall_time = 5.5
+amr.cfl = 0.4
+amr.dt_shrink = 0.01
+amr.dt_change_max = 1.05
+amr.plot_per = 1.0661e-03
+amr.check_per = 1.2445e-03
+amr.derive_plot_vars = avg_pressure mag_vort mass_fractions mixture_fraction
+peleLM.fuel_name = H2
+peleLM.mixtureFraction.format = Cantera
+peleLM.mixtureFraction.type   = mass
+peleLM.mixtureFraction.oxidTank = O2:0.233 N2:0.767
+peleLM.mixtureFraction.fuelTank = H2:1.0
+active_control.on = 0
+active_control.use_temp = 1
+active_control.temperature = 1000.0
+active_control.tau = 4.9780e-04
+active_control.height = 9.271175e-03
+active_control.v = 1
+active_control.method = 1
+active_control.velMax = 29.0
+active_control.changeMax = 0.0843
+active_control.flow_dir = 1
+active_control.pseudo_gravity = 1
+peleLM.chem_integrator = "ReactorCvode"
+peleLM.use_typ_vals_chem = 1
+ode.rtol = 1.0e-6
+ode.atol = 1.0e-5
+cvode.solve_type = GMRES
+cvode.max_order  = 4
+nodal_proj.rtol = 1.0e-10
+nodal_proj.atol = 1.0e-10
+mac_proj.rtol = 1.0e-10
+mac_proj.atol = 1.0e-12
+
+amr.hot.max_level = 2
+amr.hot.value_greater = 600
+amr.hot.field_name = temp
+amr.gradT.max_level = 3
+amr.gradT.adjacent_difference_greater = 40
+amr.gradT.field_name = temp
+amr.HR.max_level = 3
+amr.HR.value_greater = 1.0e8
+amr.HR.field_name = HeatRelease
+pmf.datafile = "eq_z_p1_T579.dat"
+# divU time-step check: the default rho_min = 0.1 kg/m3 is above pure H2 at 300 K (0.082) and above
+# hot H2-rich gases; with it the check aborts spuriously in the fuel stream
+peleLM.divu_dt_rhoMin = 0.001
+amr.refinement_indicators = hot gradT HR layer
+amr.layer.max_level = 3
+amr.layer.adjacent_difference_greater = 0.05
+amr.layer.field_name = Y(H2)
+# constant-Schmidt transport at 1 bar / 579 K (constant Schmidt numbers, chem/transport/Sc_p1_T579.json; CGS)
+transport.viscosity_mu_ref = 1.856210004281e-04
+transport.viscosity_T_ref = 300.0
+transport.viscosity_power = 0.666670926533
+transport.Prandtl_number = 0.459710069090
+transport.schmidt_numbers = 0.91 0.14 0.80 0.53 0.52 0.23 0.58 0.80 0.81
+transport.const_bulk_viscosity = 0.0
+peleLM.regrid_interp_method = 0
+peleLM.floor_species = 1
